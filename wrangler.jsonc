@@ -32,4 +32,9 @@
 		"enabled": true
 	},
 	"assets": { "directory": "./static/", "binding": "ASSETS" }
+	// Note: Environment variables for Google OAuth are configured in .dev.vars for local development
+	// For production deployment, set these as secrets using:
+	// wrangler secret put GOOGLE_CLIENT_ID
+	// wrangler secret put GOOGLE_CLIENT_SECRET
+	// wrangler secret put ALLOWED_EMAILS
 }

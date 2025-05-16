@@ -189,12 +189,21 @@ export const homeContent = async (req: Request): Promise<HtmlEscapedString> => {
 export const renderLoggedInAuthorizeScreen = async (
 	oauthScopes: { name: string; description: string }[],
 	oauthReqInfo: AuthRequest,
+	userEmail?: string,
 ) => {
 	return html`
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
 			<h1 class="text-2xl font-heading font-bold mb-6 text-gray-900">
 				Authorization Request
 			</h1>
+
+			${userEmail ? html`
+				<div class="mb-4 p-3 bg-gray-100 rounded">
+					<p class="text-sm text-gray-700">
+						Logged in as: <strong>${userEmail}</strong>
+					</p>
+				</div>
+			` : ''}
 
 			<div class="mb-8">
 				<h2 class="text-lg font-semibold mb-3 text-gray-800">
@@ -225,7 +234,7 @@ export const renderLoggedInAuthorizeScreen = async (
 					name="oauthReqInfo"
 					value="${JSON.stringify(oauthReqInfo)}"
 				/>
-				<input type="hidden" name="email" value="user@example.com" />
+				<input type="hidden" name="email" value="${userEmail || 'user@example.com'}" />
 				<button
 					type="submit"
 					name="action"
@@ -256,6 +265,14 @@ export const renderLoggedOutAuthorizeScreen = async (
 			<h1 class="text-2xl font-heading font-bold mb-6 text-gray-900">
 				Authorization Request
 			</h1>
+
+			${userEmail ? html`
+				<div class="mb-4 p-3 bg-gray-100 rounded">
+					<p class="text-sm text-gray-700">
+						Logged in as: <strong>${userEmail}</strong>
+					</p>
+				</div>
+			` : ''}
 
 			<div class="mb-8">
 				<h2 class="text-lg font-semibold mb-3 text-gray-800">

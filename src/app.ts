@@ -9,9 +9,16 @@ import {
 	renderLoggedOutAuthorizeScreen,
 } from "./utils";
 import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
+import { createGoogleAuth, type GoogleAuth } from "./googleAuth";
+import { getCookie, setCookie } from "hono/cookie";
 
 export type Bindings = Env & {
 	OAUTH_PROVIDER: OAuthHelpers;
+	GOOGLE_CLIENT_ID: string;
+	GOOGLE_CLIENT_SECRET: string;
+	GOOGLE_REDIRECT_URI?: string;
+	ALLOWED_EMAILS: string;
+	WORKER_URL?: string;
 };
 
 const app = new Hono<{
@@ -26,15 +33,14 @@ app.get("/", async (c) => {
 
 // Render an authorization page
 // If the user is logged in, we'll show a form to approve the appropriate scopes
-// If the user is not logged in, we'll show a form to both login and approve the scopes
+// If the user is not logged in, we'll redirect to Google OAuth
 app.get("/authorize", async (c) => {
-	// We don't have an actual auth system, so to demonstrate both paths, you can
-	// hard-code whether the user is logged in or not. We'll default to true
-	// const isLoggedIn = false;
-	const isLoggedIn = true;
-
 	const oauthReqInfo = await c.env.OAUTH_PROVIDER.parseAuthRequest(c.req.raw);
-
+	
+	// Check if user is already authenticated
+	const sessionEmail = getCookie(c, "auth_email");
+	const sessionToken = getCookie(c, "auth_token");
+	
 	const oauthScopes = [
 		{
 			name: "read_profile",
@@ -44,55 +50,101 @@ app.get("/authorize", async (c) => {
 		{ name: "write_data", description: "Create and modify your data" },
 	];
 
-	if (isLoggedIn) {
-		const content = await renderLoggedInAuthorizeScreen(oauthScopes, oauthReqInfo);
+	if (sessionEmail && sessionToken) {
+		// User is logged in, show authorization screen
+		const content = await renderLoggedInAuthorizeScreen(oauthScopes, oauthReqInfo, sessionEmail);
 		return c.html(layout(content, "MCP Remote Auth Demo - Authorization"));
 	}
 
-	const content = await renderLoggedOutAuthorizeScreen(oauthScopes, oauthReqInfo);
-	return c.html(layout(content, "MCP Remote Auth Demo - Authorization"));
+	// User not logged in, redirect to Google OAuth
+	try {
+		const googleAuth = await createGoogleAuth(c.env);
+		
+		// Store OAuth request info in KV for later retrieval
+		const stateKey = crypto.randomUUID();
+		await c.env.OAUTH_KV.put(
+			`oauth_state:${stateKey}`,
+			JSON.stringify(oauthReqInfo),
+			{ expirationTtl: 600 } // 10 minutes
+		);
+		
+		const authUrl = googleAuth.getAuthorizationUrl(stateKey);
+		return c.redirect(authUrl);
+	} catch (error) {
+		console.error("Google OAuth error:", error);
+		return c.html(
+			layout(
+				`<p class="error">OAuth configuration error. Please contact the administrator.</p>`,
+				"Error"
+			),
+			500
+		);
+	}
 });
 
 // The /authorize page has a form that will POST to /approve
-// This endpoint is responsible for validating any login information and
-// then completing the authorization request with the OAUTH_PROVIDER
+// This endpoint is responsible for completing the authorization request
+// after the user has been authenticated via Google OAuth
 app.post("/approve", async (c) => {
-	const { action, oauthReqInfo, email, password } = await parseApproveFormBody(
+	const { action, oauthReqInfo } = await parseApproveFormBody(
 		await c.req.parseBody(),
 	);
 
 	if (!oauthReqInfo) {
-		return c.html("INVALID LOGIN", 401);
+		return c.html("INVALID REQUEST", 401);
 	}
-
-	// If the user needs to both login and approve, we should validate the login first
-	if (action === "login_approve") {
-		// We'll allow any values for email and password for this demo
-		// but you could validate them here
-		// Ex:
-		// if (email !== "user@example.com" || password !== "password") {
-		// biome-ignore lint/correctness/noConstantCondition: This is a demo
-		if (false) {
-			return c.html(
-				layout(
-					await renderAuthorizationRejectedContent("/"),
-					"MCP Remote Auth Demo - Authorization Status",
-				),
-			);
-		}
+	
+	// Check if user is authenticated
+	const sessionEmail = getCookie(c, "auth_email");
+	const sessionToken = getCookie(c, "auth_token");
+	
+	if (!sessionEmail || !sessionToken) {
+		return c.html(
+			layout(
+				`<p class="error">You must be logged in to authorize this application.</p>`,
+				"Not Authenticated"
+			),
+			401
+		);
+	}
+	
+	// Verify session is still valid
+	const sessionData = await c.env.OAUTH_KV.get(`session:${sessionToken}`);
+	if (!sessionData) {
+		return c.html(
+			layout(
+				`<p class="error">Your session has expired. Please login again.</p>`,
+				"Session Expired"
+			),
+			401
+		);
+	}
+	
+	const session = JSON.parse(sessionData);
+	if (Date.now() > session.expiresAt) {
+		await c.env.OAUTH_KV.delete(`session:${sessionToken}`);
+		return c.html(
+			layout(
+				`<p class="error">Your session has expired. Please login again.</p>`,
+				"Session Expired"
+			),
+			401
+		);
 	}
 
 	// The user must be successfully logged in and have approved the scopes, so we
 	// can complete the authorization request
 	const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
 		request: oauthReqInfo,
-		userId: email,
+		userId: sessionEmail,
 		metadata: {
-			label: "Test User",
+			label: session.name || sessionEmail,
+			picture: session.picture,
 		},
 		scope: oauthReqInfo.scope,
 		props: {
-			userEmail: email,
+			userEmail: sessionEmail,
+			userName: session.name,
 		},
 	});
 
@@ -102,6 +154,128 @@ app.post("/approve", async (c) => {
 			"MCP Remote Auth Demo - Authorization Status",
 		),
 	);
+});
+
+// Google OAuth callback handler
+app.get("/callback", async (c) => {
+	const code = c.req.query("code");
+	const state = c.req.query("state");
+	const error = c.req.query("error");
+
+	if (error) {
+		return c.html(
+			layout(
+				`<p class="error">Authorization failed: ${error}</p>`,
+				"Authorization Failed"
+			),
+		);
+	}
+
+	if (!code || !state) {
+		return c.html(
+			layout(
+				`<p class="error">Invalid authorization response</p>`,
+				"Error"
+			),
+			400
+		);
+	}
+
+	try {
+		const googleAuth = await createGoogleAuth(c.env);
+		
+		// Retrieve the original OAuth request info
+		const storedRequestInfo = await c.env.OAUTH_KV.get(`oauth_state:${state}`);
+		if (!storedRequestInfo) {
+			throw new Error("Invalid or expired state");
+		}
+		
+		const oauthReqInfo = JSON.parse(storedRequestInfo);
+		await c.env.OAUTH_KV.delete(`oauth_state:${state}`);
+		
+		// Exchange code for tokens
+		const tokens = await googleAuth.exchangeCodeForTokens(code);
+		
+		// Get user info
+		const userInfo = await googleAuth.getUserInfo(tokens.access_token);
+		
+		// Check if email is allowed
+		if (!googleAuth.isEmailAllowed(userInfo.email)) {
+			return c.html(
+				layout(
+					`<p class="error">Access denied. Your email (${userInfo.email}) is not authorized to use this service.</p>`,
+					"Access Denied"
+				),
+				403
+			);
+		}
+		
+		// Set auth cookies
+		setCookie(c, "auth_email", userInfo.email, {
+			httpOnly: true,
+			secure: true,
+			sameSite: "Lax",
+			maxAge: 3600, // 1 hour
+		});
+		
+		const sessionToken = crypto.randomUUID();
+		setCookie(c, "auth_token", sessionToken, {
+			httpOnly: true,
+			secure: true,
+			sameSite: "Lax",
+			maxAge: 3600, // 1 hour
+		});
+		
+		// Store session info in KV
+		await c.env.OAUTH_KV.put(
+			`session:${sessionToken}`,
+			JSON.stringify({
+				email: userInfo.email,
+				name: userInfo.name,
+				picture: userInfo.picture,
+				expiresAt: Date.now() + 3600000, // 1 hour
+			}),
+			{ expirationTtl: 3600 }
+		);
+		
+		// Redirect back to authorize with session
+		const oauthScopes = [
+			{
+				name: "read_profile",
+				description: "Read your basic profile information",
+			},
+			{ name: "read_data", description: "Access your stored data" },
+			{ name: "write_data", description: "Create and modify your data" },
+		];
+		
+		const content = await renderLoggedInAuthorizeScreen(oauthScopes, oauthReqInfo, userInfo.email);
+		return c.html(layout(content, "MCP Remote Auth Demo - Authorization"));
+		
+	} catch (error) {
+		console.error("OAuth callback error:", error);
+		return c.html(
+			layout(
+				`<p class="error">Authentication failed: ${error.message}</p>`,
+				"Authentication Error"
+			),
+			500
+		);
+	}
+});
+
+// Logout endpoint
+app.post("/logout", async (c) => {
+	const sessionToken = getCookie(c, "auth_token");
+	
+	if (sessionToken) {
+		await c.env.OAUTH_KV.delete(`session:${sessionToken}`);
+	}
+	
+	// Clear cookies
+	setCookie(c, "auth_email", "", { maxAge: 0 });
+	setCookie(c, "auth_token", "", { maxAge: 0 });
+	
+	return c.redirect("/");
 });
 
 export default app;
