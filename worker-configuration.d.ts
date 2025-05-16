@@ -6,12 +6,15 @@ declare namespace Cloudflare {
 		MCP_OBJECT: DurableObjectNamespace<import("./src/index").MyMCP>;
 		ASSETS: Fetcher;
 		AI: Ai;
+		IMAGE_BUCKET: R2Bucket;
 		// Google OAuth Configuration
 		GOOGLE_CLIENT_ID: string;
 		GOOGLE_CLIENT_SECRET: string;
 		COOKIE_ENCRYPTION_KEY: string;
 		ALLOWED_EMAILS?: string;
 		HOSTED_DOMAIN?: string;
+		// Worker URL for image hosting
+		WORKER_URL?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}

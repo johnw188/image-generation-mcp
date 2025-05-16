@@ -123,9 +123,14 @@ Generate images using Cloudflare AI's Flux 1 Schnell model.
    npx wrangler kv namespace create OAUTH_KV
    ```
 
-2. Update the KV namespace ID in `wrangler.jsonc` with the ID from step 1
+2. Create the R2 bucket for image storage:
+   ```bash
+   npx wrangler r2 bucket create image-generation-mcp
+   ```
 
-3. Set the production secrets:
+3. Update the KV namespace ID in `wrangler.jsonc` with the ID from step 1
+
+4. Set the production secrets:
    ```bash
    npx wrangler secret put GOOGLE_CLIENT_ID
    npx wrangler secret put GOOGLE_CLIENT_SECRET
@@ -135,10 +140,19 @@ Generate images using Cloudflare AI's Flux 1 Schnell model.
    npx wrangler secret put HOSTED_DOMAIN
    ```
 
-4. Deploy:
+5. Deploy:
    ```bash
    npm run deploy
    ```
+
+## Image Hosting
+
+Generated images are automatically stored in R2 and served from your Worker at:
+```
+https://image-generation-mcp.[your-subdomain].workers.dev/images/[filename].jpeg
+```
+
+Images are cached for 1 year for optimal performance.
 
 ## Call your newly deployed remote MCP server from a remote MCP client
 

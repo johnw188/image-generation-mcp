@@ -3,6 +3,7 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { GoogleHandler } from "./google-handler";
+import { createRouter } from "./router";
 
 // Context from the auth process, encrypted & stored in the auth token
 // and provided to the MyMCP as this.props
@@ -52,6 +53,26 @@ export class MyMCP extends McpAgent<Props, Env> {
 
           const base64Image = response.image;
 
+          // Convert base64 to binary data for R2 upload
+          const binaryString = atob(base64Image);
+          const imageBuffer = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+
+          // Generate a unique filename
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(2, 15);
+          const filename = `${timestamp}-${randomId}.jpeg`;
+
+          // Upload to R2
+          await this.env.IMAGE_BUCKET.put(filename, imageBuffer, {
+            httpMetadata: {
+              contentType: "image/jpeg",
+            },
+          });
+
+          // Create the URL for the hosted image
+          const baseUrl = this.env.WORKER_URL || "https://image-generation-mcp.john-welsh.workers.dev";
+          const imageUrl = `${baseUrl}/images/${filename}`;
+
           return {
             content: [
               {
@@ -61,7 +82,7 @@ export class MyMCP extends McpAgent<Props, Env> {
               },
               {
                 type: "text",
-                text: `✨ Image generated successfully!\n\n**Prompt:** "${prompt}"\n**Model:** Flux 1 Schnell\n**Steps:** ${steps}\n**Generated for:** ${userInfo}`,
+                text: `✨ Image generated successfully!\n\n**Prompt:** "${prompt}"\n**Model:** Flux 1 Schnell\n**Steps:** ${steps}\n**Generated for:** ${userInfo}\n\n🔗 **Image URL:** ${imageUrl}`,
               },
             ],
           };
@@ -80,7 +101,7 @@ export class MyMCP extends McpAgent<Props, Env> {
   }
 }
 
-export default new OAuthProvider({
+const oauthProvider = new OAuthProvider({
   apiRoute: "/sse",
   apiHandler: MyMCP.mount("/sse"),
   defaultHandler: GoogleHandler,
@@ -88,3 +109,7 @@ export default new OAuthProvider({
   tokenEndpoint: "/token",
   clientRegistrationEndpoint: "/register",
 });
+
+const router = createRouter(oauthProvider);
+
+export default router;

@@ -60,6 +60,7 @@ npm run cf-typegen
 - **Durable Objects**: `MyMCP` class for stateful MCP server instances
 - **KV Namespace**: `OAUTH_KV` for OAuth session storage
 - **AI Binding**: `AI` for accessing Cloudflare AI models
+- **R2 Bucket**: `IMAGE_BUCKET` for storing generated images
 - **Static Assets**: Served from `/static` directory
 
 ### AI Integration
@@ -67,9 +68,17 @@ npm run cf-typegen
 - Uses `@cf/black-forest-labs/flux-1-schnell` model
 - Optimized for fast, high-quality generation
 - Supports customizable diffusion steps
-- Returns base64-encoded PNG images
+- Returns both base64-encoded JPEG images and hosted URLs
 - Minimum 4 diffusion steps for quality
 - Includes error handling for AI service failures
+
+### R2 Image Storage
+
+- Generated images are stored in R2 bucket
+- Images served via `/images/[filename]` route
+- Long-term caching with Cache-Control headers
+- URLs follow the pattern: `https://[worker-domain]/images/[timestamp]-[random-id].jpeg`
+- Images are directly accessible without authentication
 
 ## Testing & Debugging
 

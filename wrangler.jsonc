@@ -28,6 +28,12 @@
 			"id": "6785f6e603a04d5eb7b0bbf02266cfde"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "IMAGE_BUCKET",
+			"bucket_name": "image-generation-mcp"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},

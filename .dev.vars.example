@@ -10,3 +10,9 @@ COOKIE_ENCRYPTION_KEY=your-secure-encryption-key
 
 # Optional: Restrict logins to a specific Google Workspace domain
 # HOSTED_DOMAIN=example.com
+
+# Optional: Override the Worker URL for image hosting (defaults to workers.dev domain)
+# For local development, uncomment and use:
+# WORKER_URL=http://localhost:8787
+# For production, use your workers.dev domain:
+# WORKER_URL=https://image-generation-mcp.john-welsh.workers.dev
