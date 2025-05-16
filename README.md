@@ -1,14 +1,16 @@
 # Image Generation MCP Server on Cloudflare
 
-An MCP (Model Context Protocol) server on Cloudflare Workers for AI-powered image generation, secured with Google OAuth authentication.
+An MCP (Model Context Protocol) server on Cloudflare Workers for AI-powered image generation using Cloudflare AI's Flux model, secured with Google OAuth authentication.
 
 ## Features
 
-- 🖼️ **Image Generation Tool**: Generate images using AI models (Stable Diffusion XL, DALL-E 3)
+- 🖼️ **Image Generation**: Generate images using Cloudflare AI's Flux 1 Schnell model
+- 🚀 **Native Cloudflare AI**: Direct integration with Cloudflare's AI models
 - 🔐 **Google OAuth Authentication**: Secure access with Google OAuth 2.0
 - 🍪 **Persistent Sessions**: Cookie-based session management
 - 🌐 **Remote Access**: Deploy on Cloudflare Workers for global availability
 - 👤 **User Context**: Pass authenticated user information to tools
+- 🎨 **Fast Generation**: Optimized for quick, high-quality image generation
 
 ## Google OAuth Setup
 
@@ -94,8 +96,31 @@ When you open Claude a browser window should open and allow you to login. You sh
 </div>
 
 <div align="center">
-  <img src="img/claude-does-math-the-fancy-way.png" alt="Claude answers the prompt 'I seem to have lost my calculator and have run out of fingers. Could you use the math tool to add 23 and 19?' by invoking the MCP add tool" width="600"/>
+  <img src="img/claude-generates-image.png" alt="Claude generates an image using the prompt 'Generate a peaceful zen garden with cherry blossoms'" width="600"/>
 </div>
+
+## Available Tools
+
+### `generate_image`
+Generate images using Cloudflare AI's Flux 1 Schnell model.
+
+**Parameters:**
+- `prompt` (required): The text description of the image to generate
+- `steps` (optional): Number of diffusion steps (minimum 4, default: 4)
+
+**Example:**
+```json
+{
+  "prompt": "A serene mountain landscape at sunset with a lake",
+  "steps": 8
+}
+```
+
+### `list_ai_models`
+List all available AI models on Cloudflare's platform.
+
+### `get_user_info`
+Get information about the authenticated user.
 
 ## Deploy to Cloudflare
 

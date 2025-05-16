@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a remote MCP (Model Context Protocol) server deployed on Cloudflare Workers with OAuth authentication. The server provides tools that can be accessed by Claude Desktop and other MCP clients over HTTP/SSE.
+This is a remote MCP (Model Context Protocol) server deployed on Cloudflare Workers with OAuth authentication. The server provides image generation capabilities using Cloudflare AI's Flux 1 Schnell model, accessible by Claude Desktop and other MCP clients over HTTP/SSE.
 
 ## Development Commands
 
@@ -36,7 +36,8 @@ npm run cf-typegen
 
 1. **MCP Server** (`src/index.ts`):
    - Uses `McpAgent` from the `agents` package to create a durable object
-   - Implements MCP server functionality with tools (e.g., "add" tool for demo)
+   - Implements image generation using Cloudflare AI's Flux 1 Schnell
+   - Provides tools: `generate_image`, `list_ai_models`, `get_user_info`
    - Mounts at `/sse` endpoint for SSE connections
 
 2. **OAuth Provider** (`src/index.ts`):
@@ -58,7 +59,17 @@ npm run cf-typegen
 
 - **Durable Objects**: `MyMCP` class for stateful MCP server instances
 - **KV Namespace**: `OAUTH_KV` for OAuth session storage
+- **AI Binding**: `AI` for accessing Cloudflare AI models
 - **Static Assets**: Served from `/static` directory
+
+### AI Integration
+
+- Uses `@cf/black-forest-labs/flux-1-schnell` model
+- Optimized for fast, high-quality generation
+- Supports customizable diffusion steps
+- Returns base64-encoded PNG images
+- Minimum 4 diffusion steps for quality
+- Includes error handling for AI service failures
 
 ## Testing & Debugging
 

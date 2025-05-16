@@ -31,9 +31,12 @@
 	"observability": {
 		"enabled": true
 	},
+	"ai": {
+		"binding": "AI"
+	},
 	"assets": { "directory": "./static/", "binding": "ASSETS" },
 	"dev": {
-		"port": 8788
+		"port": 8787
 	}
 	// Note: Environment variables for Google OAuth are configured in .dev.vars for local development
 	// For production deployment, set these as secrets using:
