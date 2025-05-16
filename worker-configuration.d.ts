@@ -5,6 +5,12 @@ declare namespace Cloudflare {
 		OAUTH_KV: KVNamespace;
 		MCP_OBJECT: DurableObjectNamespace<import("./src/index").MyMCP>;
 		ASSETS: Fetcher;
+		// Google OAuth Configuration
+		GOOGLE_CLIENT_ID: string;
+		GOOGLE_CLIENT_SECRET: string;
+		COOKIE_ENCRYPTION_KEY: string;
+		ALLOWED_EMAILS?: string;
+		HOSTED_DOMAIN?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}

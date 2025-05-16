@@ -1,3 +1,12 @@
+# Google OAuth Configuration
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-ALLOWED_EMAILS=user1@example.com,user2@example.com
+
+# Cookie encryption key (generate a secure random string)
+COOKIE_ENCRYPTION_KEY=your-secure-encryption-key
+
+# Optional: Comma-separated list of allowed emails for access control
+# ALLOWED_EMAILS=user1@example.com,user2@example.com
+
+# Optional: Restrict logins to a specific Google Workspace domain
+# HOSTED_DOMAIN=example.com

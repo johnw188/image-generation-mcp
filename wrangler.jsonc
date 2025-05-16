@@ -31,10 +31,15 @@
 	"observability": {
 		"enabled": true
 	},
-	"assets": { "directory": "./static/", "binding": "ASSETS" }
+	"assets": { "directory": "./static/", "binding": "ASSETS" },
+	"dev": {
+		"port": 8788
+	}
 	// Note: Environment variables for Google OAuth are configured in .dev.vars for local development
 	// For production deployment, set these as secrets using:
 	// wrangler secret put GOOGLE_CLIENT_ID
 	// wrangler secret put GOOGLE_CLIENT_SECRET
-	// wrangler secret put ALLOWED_EMAILS
+	// wrangler secret put COOKIE_ENCRYPTION_KEY
+	// wrangler secret put ALLOWED_EMAILS (optional)
+	// wrangler secret put HOSTED_DOMAIN (optional)
 }

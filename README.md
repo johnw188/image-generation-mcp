@@ -1,22 +1,49 @@
-# Remote MCP Server on Cloudflare
+# Image Generation MCP Server on Cloudflare
 
-Let's get a remote MCP server up-and-running on Cloudflare Workers complete with OAuth login!
+An MCP (Model Context Protocol) server on Cloudflare Workers for AI-powered image generation, secured with Google OAuth authentication.
+
+## Features
+
+- 🖼️ **Image Generation Tool**: Generate images using AI models (Stable Diffusion XL, DALL-E 3)
+- 🔐 **Google OAuth Authentication**: Secure access with Google OAuth 2.0
+- 🍪 **Persistent Sessions**: Cookie-based session management
+- 🌐 **Remote Access**: Deploy on Cloudflare Workers for global availability
+- 👤 **User Context**: Pass authenticated user information to tools
+
+## Google OAuth Setup
+
+Before running the server, you need to set up Google OAuth:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
+5. Application type: Web application
+6. Add authorized redirect URIs:
+   - For local development: `http://localhost:8787/callback`
+   - For production: `https://your-worker-name.workers.dev/callback`
+7. Copy the Client ID and Client Secret
 
 ## Develop locally
 
 ```bash
 # clone the repository
-git clone https://github.com/cloudflare/ai.git
-# Or if using ssh:
-# git clone git@github.com:cloudflare/ai.git
+git clone <your-repo-url>
 
 # install dependencies
-cd ai
-# Note: using pnpm instead of just "npm"
-pnpm install
+cd image-generation-mcp
+npm install
+
+# copy the environment variables example
+cp .dev.vars.example .dev.vars
+
+# edit .dev.vars and add your Google OAuth credentials
+# GOOGLE_CLIENT_ID=your-actual-client-id
+# GOOGLE_CLIENT_SECRET=your-actual-client-secret
+# COOKIE_ENCRYPTION_KEY=generate-a-secure-random-string
 
 # run locally
-npx nx dev remote-mcp-server
+npm run dev
 ```
 
 You should be able to open [`http://localhost:8787/`](http://localhost:8787/) in your browser
@@ -27,7 +54,7 @@ To explore your new MCP api, you can use the [MCP Inspector](https://modelcontex
 
 - Start it with `npx @modelcontextprotocol/inspector`
 - [Within the inspector](http://localhost:5173), switch the Transport Type to `SSE` and enter `http://localhost:8787/sse` as the URL of the MCP server to connect to, and click "Connect"
-- You will navigate to a (mock) user/password login screen. Input any email and pass to login.
+- You will navigate to a Google OAuth login screen. Click approve to authenticate with your Google account.
 - You should be redirected back to the MCP Inspector and you can now list and call any defined tools!
 
 <div align="center">
@@ -47,7 +74,7 @@ Open the file in your text editor and replace it with this configuration:
 ```json
 {
   "mcpServers": {
-    "math": {
+    "image-generation": {
       "command": "npx",
       "args": [
         "mcp-remote",
@@ -72,9 +99,27 @@ When you open Claude a browser window should open and allow you to login. You sh
 
 ## Deploy to Cloudflare
 
-1. `npx wrangler kv namespace create OAUTH_KV`
-2. Follow the guidance to add the kv namespace ID to `wrangler.jsonc`
-3. `npm run deploy`
+1. Create the KV namespace (if not already created):
+   ```bash
+   npx wrangler kv namespace create OAUTH_KV
+   ```
+
+2. Update the KV namespace ID in `wrangler.jsonc` with the ID from step 1
+
+3. Set the production secrets:
+   ```bash
+   npx wrangler secret put GOOGLE_CLIENT_ID
+   npx wrangler secret put GOOGLE_CLIENT_SECRET
+   npx wrangler secret put COOKIE_ENCRYPTION_KEY
+   # Optional:
+   npx wrangler secret put ALLOWED_EMAILS
+   npx wrangler secret put HOSTED_DOMAIN
+   ```
+
+4. Deploy:
+   ```bash
+   npm run deploy
+   ```
 
 ## Call your newly deployed remote MCP server from a remote MCP client
 
@@ -93,11 +138,11 @@ Update the Claude configuration file to point to your `workers.dev` URL (ex: `wo
 ```json
 {
   "mcpServers": {
-    "math": {
+    "image-generation": {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "https://worker-name.account-name.workers.dev/sse"
+        "https://image-generation-mcp.your-account.workers.dev/sse"
       ]
     }
   }
