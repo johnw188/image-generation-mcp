@@ -116,12 +116,6 @@ Generate images using Cloudflare AI's Flux 1 Schnell model.
 }
 ```
 
-### `list_ai_models`
-List all available AI models on Cloudflare's platform.
-
-### `get_user_info`
-Get information about the authenticated user.
-
 ## Deploy to Cloudflare
 
 1. Create the KV namespace (if not already created):

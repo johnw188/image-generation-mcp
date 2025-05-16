@@ -37,7 +37,7 @@ npm run cf-typegen
 1. **MCP Server** (`src/index.ts`):
    - Uses `McpAgent` from the `agents` package to create a durable object
    - Implements image generation using Cloudflare AI's Flux 1 Schnell
-   - Provides tools: `generate_image`, `list_ai_models`, `get_user_info`
+   - Provides the `generate_image` tool
    - Mounts at `/sse` endpoint for SSE connections
 
 2. **OAuth Provider** (`src/index.ts`):

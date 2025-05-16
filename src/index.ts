@@ -77,62 +77,6 @@ export class MyMCP extends McpAgent<Props, Env> {
         }
       }
     );
-
-    // Get available AI models tool
-    this.server.tool(
-      "list_ai_models",
-      {},
-      async () => {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Available AI Models on Cloudflare:
-
-**Text to Image (Currently Using):**
-• @cf/black-forest-labs/flux-1-schnell - Flux 1 Schnell (fast, high-quality)
-
-**Other Available Models:**
-• @cf/stabilityai/stable-diffusion-xl-base-1.0 - Stable Diffusion XL
-• @cf/lykon/dreamshaper-8-lcm - DreamShaper (fast generation)
-• @cf/bytedance/stable-diffusion-xl-lightning - SDXL Lightning (ultra-fast)
-
-**Image to Text:**
-• @cf/unum/uform-gen2-qwen-500m - Image captioning
-
-**Text Generation:**
-• @cf/meta/llama-3.2-3b-instruct - Llama 3.2 3B
-• @cf/meta/llama-3.2-1b-instruct - Llama 3.2 1B
-• @cf/google/gemma-7b-it-lora - Gemma 7B
-
-**Other Models:**
-• @cf/huggingface/distilbert-sst-2-int8 - Sentiment analysis
-• @cf/openai/whisper - Speech to text
-
-Note: This MCP server currently uses Flux 1 Schnell for fast, high-quality image generation.`,
-            },
-          ],
-        };
-      }
-    );
-
-    // Add a simple info tool
-    this.server.tool("get_user_info", {}, async () => {
-      if (!this.props) {
-        return {
-          content: [{ type: "text", text: "No user information available" }],
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `User: ${this.props.name}\nEmail: ${this.props.email}`,
-          },
-        ],
-      };
-    });
   }
 }
 
