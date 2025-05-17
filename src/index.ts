@@ -23,15 +23,11 @@ export class MyMCP extends McpAgent<Props, Env> {
     // Image generation tool
     this.server.tool(
       "generate_image",
+      "Generate an image using the Flux 1 Schnell diffusion model. This model excels at creating high-quality images from detailed text descriptions. For best results, provide clear, descriptive prompts that specify style, composition, colors, and mood. The model understands complex scenes and artistic styles.",
       {
         prompt: z.string().describe("The text description of the image you want to generate"),
-        steps: z
-          .number()
-          .optional()
-          .default(4)
-          .describe("Number of diffusion steps (minimum 4, higher values can improve quality)"),
       },
-      async ({ prompt, steps = 4 }) => {
+      async ({ prompt }) => {
         try {
           const userInfo = this.props
             ? `${this.props.name} (${this.props.email})`
@@ -42,7 +38,7 @@ export class MyMCP extends McpAgent<Props, Env> {
             "@cf/black-forest-labs/flux-1-schnell",
             { 
               prompt, 
-              steps: Math.max(steps || 4, 4) // Minimum 4 steps for quality
+              steps: 8,
             }
           ) as any;
           
@@ -75,26 +71,22 @@ export class MyMCP extends McpAgent<Props, Env> {
 
           return {
             content: [
-              {
-                type: "image",
-                data: base64Image,
-                mimeType: "image/jpeg",
-              },
+              // {
+              //   type: "image",
+              //   data: base64Image,
+              //   mimeType: "image/jpeg",
+              // },
               {
                 type: "text",
-                text: `✨ Image generated successfully!\n\n**Prompt:** "${prompt}"\n**Model:** Flux 1 Schnell\n**Steps:** ${steps}\n**Generated for:** ${userInfo}\n\n🔗 **Image URL:** ${imageUrl}`,
+                text: `✨ Image generated successfully!\n\n**Prompt:** "${prompt}"\n**Model:** Flux 1 Schnell\n**Steps:** 8\n**Generated for:** ${userInfo}\n\n🔗 **Image URL:** ${imageUrl}`,
               },
             ],
           };
         } catch (error) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `❌ Error generating image: ${error instanceof Error ? error.message : "Unknown error"}\n\nPlease try again with a different prompt.`,
-              },
-            ],
-          };
+          // MCP tools should throw errors rather than return them as content
+          throw new Error(
+            `Failed to generate image: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
         }
       }
     );
