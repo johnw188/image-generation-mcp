@@ -78,7 +78,7 @@ export class MyMCP extends McpAgent<Props, Env> {
               // },
               {
                 type: "text",
-                text: `✨ Image generated successfully!\n\n**Prompt:** "${prompt}"\n**Model:** Flux 1 Schnell\n**Steps:** 8\n**Generated for:** ${userInfo}\n\n🔗 **Image URL:** ${imageUrl}`,
+                text: imageUrl,
               },
             ],
           };
