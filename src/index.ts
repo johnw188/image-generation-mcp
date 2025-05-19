@@ -100,6 +100,8 @@ const oauthProvider = new OAuthProvider({
   authorizeEndpoint: "/authorize",
   tokenEndpoint: "/token",
   clientRegistrationEndpoint: "/register",
+  // Token lifetime configuration (8 hours in seconds)
+  tokenLifetime: 8 * 60 * 60, // 28800 seconds
 });
 
 const router = createRouter(oauthProvider);
