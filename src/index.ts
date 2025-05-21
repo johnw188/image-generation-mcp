@@ -66,7 +66,7 @@ export class MyMCP extends McpAgent<Props, Env> {
           });
 
           // Create the URL for the hosted image
-          const baseUrl = this.env.WORKER_URL || "https://image-generation-mcp.john-welsh.workers.dev";
+          const baseUrl = this.env.WORKER_URL || "https://image-generation-mcp.code-with-claude.workers.dev";
           const imageUrl = `${baseUrl}/images/${filename}`;
 
           return {
