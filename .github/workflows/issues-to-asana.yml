@@ -1,0 +1,19 @@
+name: GitHub Issues to Asana Tasks
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  issues-to-tasks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: GitHub Issues To Asana Tasks
+        uses: johnw188/github-issues-asana-tasks-action@main
+        with:
+          asana_pat: ${{ secrets.ASANA_PAT }}
+          asana_project_id: '1210415172935158'
+          asana_custom_field_id: '1210415172935161'
