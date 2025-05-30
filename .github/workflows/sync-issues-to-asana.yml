@@ -1,0 +1,24 @@
+name: Sync All GitHub Issues to Asana
+
+on:
+  workflow_dispatch:
+    inputs:
+      sync_closed_issues:
+        description: 'Sync closed issues too?'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  sync-all-issues:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Sync All Issues to Asana
+        uses: johnw188/github-issues-asana-tasks-action@main
+        with:
+          asana_pat: ${{ secrets.ASANA_PAT }}
+          asana_project_id: '1210415172935158'
+          repository_field_id: '1210415172935161'
+          creator_field_id: '1210418177600405'
+          sync_closed_issues: ${{ github.event.inputs.sync_closed_issues }}
