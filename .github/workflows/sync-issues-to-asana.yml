@@ -21,4 +21,5 @@ jobs:
           asana_project_id: '1210415172935158'
           repository_field_id: '1210415172935161'
           creator_field_id: '1210418177600405'
+          github_url_field_id: '1210418395455176'
           sync_closed_issues: ${{ github.event.inputs.sync_closed_issues }}
