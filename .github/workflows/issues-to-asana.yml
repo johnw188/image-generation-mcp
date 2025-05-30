@@ -16,4 +16,5 @@ jobs:
         with:
           asana_pat: ${{ secrets.ASANA_PAT }}
           asana_project_id: '1210415172935158'
-          asana_custom_field_id: '1210415172935161'
+          repository_field_id: '1210415172935161'
+          creator_field_id: '1210418177600405'
