@@ -23,11 +23,10 @@ export class MyMCP extends McpAgent<Props, Env> {
     // Image generation tool
     this.server.tool(
       "generate_image",
-      "Generate an image using the Flux 1 Schnell diffusion model. This model excels at creating high-quality images from detailed text descriptions. For best results, provide clear, descriptive prompts that specify style, composition, colors, and mood. The model understands complex scenes and artistic styles. The tool will return a URL where the generated image is hosted.",
       {
-        prompt: z.string().describe("The text description of the image you want to generate"),
+        description: z.string(),
       },
-      async ({ prompt }) => {
+      async ({ description }) => {
         try {
           const userInfo = this.props
             ? `${this.props.name} (${this.props.email})`
@@ -37,7 +36,7 @@ export class MyMCP extends McpAgent<Props, Env> {
           const response = await this.env.AI.run(
             "@cf/black-forest-labs/flux-1-schnell",
             { 
-              prompt, 
+              description,
               steps: 8,
             }
           ) as any;
