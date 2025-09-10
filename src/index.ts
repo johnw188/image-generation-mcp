@@ -24,9 +24,9 @@ export class MyMCP extends McpAgent<Props, Env> {
     this.server.tool(
       "generate_image",
       {
-        description: z.string(),
+        prompt: z.string(),
       },
-      async ({ description }) => {
+      async ({ prompt }) => {
         try {
           const userInfo = this.props
             ? `${this.props.name} (${this.props.email})`
@@ -36,7 +36,7 @@ export class MyMCP extends McpAgent<Props, Env> {
           const response = await this.env.AI.run(
             "@cf/black-forest-labs/flux-1-schnell",
             { 
-              description,
+              prompt,
               steps: 8,
             }
           ) as any;
